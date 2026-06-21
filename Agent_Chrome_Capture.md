@@ -366,6 +366,8 @@ El fichero debe indicar `transcript_source: "manual" | "automatic" | null` y `tr
 
 ### Descarga y entrega al Orchestrator
 
+- Antes de crear el Blob, validar el objeto completo contra una copia local exacta del esquema de captura v1 definido en `Data_Contracts.md`.
+- Si falta un campo, el tipo es incorrecto o la versión no está soportada, no descargar el fichero. Mostrar `Error de contrato: <campo y motivo>` en el popup y registrar el detalle únicamente en la consola de la extensión.
 - `chrome.downloads.download()` guardará el fichero en `YT-Knowledge-Inbox/<nombre>.md`, ruta relativa a la carpeta Descargas configurada en el navegador.
 - El Orchestrator vigilará esa misma carpeta por defecto. No existe servidor local ni movimiento manual en el flujo normal.
 - El nombre será `[YYYY-MM-DD] - [Título sanitizado].md`; la fecha es la de captura. En una colisión se añade `[video_id]`.
@@ -379,3 +381,4 @@ El fichero debe indicar `transcript_source: "manual" | "automatic" | null` y `tr
 - Títulos con Unicode, caracteres inválidos, más de 200 caracteres y nombres duplicados.
 - Página que no sea un vídeo, vídeo privado/no disponible y fallo de descarga.
 - Verificación del fichero contra el contrato v1 definido en `Data_Contracts.md`.
+- Fixture inválido por cada campo obligatorio, tipo incorrecto y versión desconocida; ninguno debe producir una descarga.

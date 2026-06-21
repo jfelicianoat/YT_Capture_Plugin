@@ -9,6 +9,8 @@ Extensión de Chrome (Manifest V3) que captura metadatos y transcripciones de vi
 3. El popup muestra los datos detectados (título, canal, duración, transcripción disponible)
 4. Presionás **CAPTURAR VIDEO** y se genera un archivo `.md` en `YT-Knowledge-Inbox/`
 
+Antes de descargar, la extensión valida el objeto completo contra el contrato de captura v1. Un error de versión, campo o tipo bloquea la descarga y se muestra claramente en el popup.
+
 ## Estrategia de extracción (3 niveles)
 
 La extensión intenta extraer metadatos en este orden:
