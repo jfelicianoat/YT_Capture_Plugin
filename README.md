@@ -100,8 +100,27 @@ status: "pending"
 
 - Chrome Extension Manifest V3
 - JavaScript (Service Worker + Popup)
-- Tailwind CSS (popup UI 350x500px)
+- CSS local (popup UI 350x500px)
 - Salida: Markdown con frontmatter YAML
+
+## Desarrollo
+
+La fase 1 incluye la estructura Manifest V3, el contrato de captura v1, validación previa a cualquier descarga y pruebas unitarias. La extracción real de YouTube y la serialización/descarga final permanecen deshabilitadas hasta sus fases correspondientes.
+
+```powershell
+node --test
+```
+
+```text
+manifest.json
+popup/
+src/
+  contracts/
+  extraction/
+  markdown/
+  download/
+tests/
+```
 
 ## Compatibilidad
 

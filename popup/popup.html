@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YT Knowledge Capture</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="popup-shell" aria-labelledby="popup-title">
+      <header class="popup-header">
+        <p class="eyebrow">Captura local</p>
+        <h1 id="popup-title">YT Knowledge Capture</h1>
+      </header>
+
+      <section class="video-summary" aria-label="Datos del vídeo">
+        <dl>
+          <div><dt>Título</dt><dd id="video-title">Pendiente de detección</dd></div>
+          <div><dt>Canal</dt><dd id="video-channel">—</dd></div>
+          <div><dt>Duración</dt><dd id="video-duration">—</dd></div>
+          <div><dt>Publicado</dt><dd id="video-published">—</dd></div>
+          <div><dt>Transcripción</dt><dd id="video-transcript">—</dd></div>
+        </dl>
+      </section>
+
+      <button id="capture-button" type="button" disabled>Capturar vídeo</button>
+      <p id="status-message" class="status" role="status" aria-live="polite">Preparando la extensión…</p>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
