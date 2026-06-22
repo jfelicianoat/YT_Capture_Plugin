@@ -84,7 +84,7 @@ status: "pending"
 
 ## Seguridad y privacidad
 
-- Todo el procesamiento es local en el navegador — cero llamadas externas
+- Todo el procesamiento se realiza en el navegador; la única petición de red adicional es a los subtítulos del propio dominio de YouTube
 - No se envía telemetría ni datos a servidores externos
 - Permisos mínimos: solo lo necesario para capturar y descargar
 
@@ -105,7 +105,9 @@ status: "pending"
 
 ## Desarrollo
 
-La fase 1 incluye la estructura Manifest V3, el contrato de captura v1, validación previa a cualquier descarga y pruebas unitarias. La extracción real de YouTube y la serialización/descarga final permanecen deshabilitadas hasta sus fases correspondientes.
+Las fases 1 y 2 incluyen la estructura Manifest V3, el contrato de captura v1, la validación previa a cualquier descarga y la extracción real de metadata y transcripciones de YouTube. La selección de metadata usa JSON-LD, variables globales y DOM en ese orden; la transcripción admite pistas manuales, automáticas y vídeos sin subtítulos.
+
+La generación y descarga del Markdown siguen deshabilitadas hasta la fase 3. Por ese motivo, el botón **CAPTURAR VIDEO** permanece inactivo aunque el popup muestre correctamente los datos detectados.
 
 ```powershell
 node --test
