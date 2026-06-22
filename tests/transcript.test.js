@@ -44,3 +44,24 @@ test("formatea timestamps negativos o largos", () => {
   assert.equal(formatTimestamp(-100), "00:00:00");
   assert.equal(formatTimestamp(3_661_000), "01:01:01");
 });
+
+test("ordena eventos json3 cronológicamente de forma estable", () => {
+  const transcript = parseJson3Transcript({
+    events: [
+      { tStartMs: 5000, segs: [{ utf8: "tercero" }] },
+      { tStartMs: 1000, segs: [{ utf8: "primero" }] },
+      { tStartMs: 1000, segs: [{ utf8: "segundo" }] }
+    ]
+  });
+  assert.equal(
+    transcript,
+    "[00:00:01] primero\n[00:00:01] segundo\n[00:00:05] tercero"
+  );
+});
+
+test("conserva entidades numéricas inválidas sin lanzar excepciones", () => {
+  assert.equal(
+    parseJson3Transcript({ events: [{ tStartMs: 0, segs: [{ utf8: "Valor &#x110000; y &#xD800;" }] }] }),
+    "[00:00:00] Valor &#x110000; y &#xD800;"
+  );
+});

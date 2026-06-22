@@ -1,5 +1,8 @@
 import { validateCapture } from "../src/contracts/capture-validator.js";
+import { prepareCaptureForDownload } from "../src/capture-pipeline.js";
+import { downloadCaptureMarkdown } from "../src/download/chrome-downloader.js";
 import { extractYoutubeVideo, getYoutubeVideoId } from "../src/extraction/extractor.js";
+import { buildCaptureMarkdown } from "../src/markdown/markdown-builder.js";
 
 const captureButton = document.querySelector("#capture-button");
 const statusMessage = document.querySelector("#status-message");
@@ -12,8 +15,10 @@ const fields = {
 };
 
 let currentVideoId = null;
+let currentCandidate = null;
 let refreshGeneration = 0;
 let monitorId = null;
+let isBusy = false;
 
 function setStatus(message, state = "idle") {
   statusMessage.textContent = message;
@@ -38,6 +43,11 @@ function resetFields() {
   fields.transcript.textContent = "—";
 }
 
+function setCaptureButton({ disabled, label = "Capturar vídeo" }) {
+  captureButton.disabled = disabled;
+  captureButton.textContent = label;
+}
+
 function showCapture(candidate) {
   fields.title.textContent = candidate.title;
   fields.channel.textContent = candidate.channel;
@@ -60,14 +70,16 @@ async function refreshFromActiveTab() {
 
   if (!tab?.id || !videoId) {
     currentVideoId = null;
+    currentCandidate = null;
     resetFields();
-    captureButton.disabled = true;
+    setCaptureButton({ disabled: true });
     setStatus("Abre un vídeo de YouTube para detectar sus datos.");
     return;
   }
 
   currentVideoId = videoId;
-  captureButton.disabled = true;
+  currentCandidate = null;
+  setCaptureButton({ disabled: true });
   setStatus("Detectando metadatos y transcripción…");
 
   try {
@@ -81,13 +93,40 @@ async function refreshFromActiveTab() {
     }
 
     showCapture(candidate);
+    currentCandidate = candidate;
+    setCaptureButton({ disabled: false });
     setStatus(candidate.has_transcript
-      ? "Datos listos. La descarga se habilitará en la fase 3."
-      : "Vídeo detectado sin transcripción. La descarga se habilitará en la fase 3.");
+      ? "Datos listos para generar el Markdown."
+      : "Vídeo sin transcripción. Se generará el Markdown con la sección vacía.");
   } catch (error) {
     if (generation !== refreshGeneration) return;
+    currentCandidate = null;
     resetFields();
+    setCaptureButton({ disabled: true });
     setStatus(`No se pudo completar la detección: ${error.message}`, "error");
+  }
+}
+
+async function captureCurrentVideo() {
+  if (isBusy || !currentCandidate) return;
+  const candidate = currentCandidate;
+  isBusy = true;
+  setCaptureButton({ disabled: true, label: "Preparando…" });
+  setStatus("Validando y generando el archivo…");
+
+  try {
+    const result = await prepareCaptureForDownload(candidate, {
+      serialize: buildCaptureMarkdown,
+      download: downloadCaptureMarkdown
+    });
+    setStatus(`Descarga iniciada: ${result.filename}`, "success");
+  } catch (error) {
+    console.error("Error al capturar el vídeo", error);
+    setStatus(error?.message ?? "No se pudo descargar el archivo.", "error");
+  } finally {
+    isBusy = false;
+    const candidateStillCurrent = currentCandidate?.capture_id === candidate.capture_id;
+    setCaptureButton({ disabled: !candidateStillCurrent });
   }
 }
 
@@ -109,11 +148,12 @@ async function initializePopup() {
     await refreshFromActiveTab();
     monitorId = window.setInterval(monitorSpaNavigation, 1000);
   } catch (error) {
-    captureButton.disabled = true;
+    setCaptureButton({ disabled: true });
     setStatus(`No se pudo iniciar la extensión: ${error.message}`, "error");
   }
 }
 
+captureButton.addEventListener("click", captureCurrentVideo);
 initializePopup();
 
 window.addEventListener("unload", () => {

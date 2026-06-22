@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { validateCapture } from "../src/contracts/capture-validator.js";
-import { ExtractionError, extractYoutubeVideo } from "../src/extraction/extractor.js";
+import { ExtractionError, extractYoutubeVideo, fetchJsonWithBrowser } from "../src/extraction/extractor.js";
 import { pageDataWithAllSources, transcriptJson3 } from "./fixtures/page-data.js";
 
 const dependencies = {
@@ -48,4 +48,18 @@ test("rechaza metadata sin título", async () => {
     ),
     (error) => error instanceof ExtractionError && error.code === "TITLE_UNAVAILABLE"
   );
+});
+
+test("cancela una petición de subtítulos que supera el tiempo límite", async () => {
+  let receivedSignal = null;
+  const fetchFunction = (_url, options) => new Promise((_resolve, reject) => {
+    receivedSignal = options.signal;
+    options.signal.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
+  });
+
+  await assert.rejects(
+    fetchJsonWithBrowser("https://www.youtube.com/api/timedtext", { fetchFunction, timeoutMs: 1 }),
+    /aborted/
+  );
+  assert.equal(receivedSignal.aborted, true);
 });

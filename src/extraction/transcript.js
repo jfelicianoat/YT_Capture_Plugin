@@ -30,7 +30,11 @@ function decodeHtmlEntities(value) {
     if (entity[0] === "#") {
       const hex = entity[1]?.toLowerCase() === "x";
       const codePoint = Number.parseInt(entity.slice(hex ? 2 : 1), hex ? 16 : 10);
-      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : match;
+      const isUnicodeScalar = Number.isInteger(codePoint)
+        && codePoint >= 0
+        && codePoint <= 0x10FFFF
+        && !(codePoint >= 0xD800 && codePoint <= 0xDFFF);
+      return isUnicodeScalar ? String.fromCodePoint(codePoint) : match;
     }
     return named[entity.toLowerCase()] ?? match;
   });
@@ -47,7 +51,16 @@ export function formatTimestamp(milliseconds) {
 export function parseJson3Transcript(payload) {
   if (!Array.isArray(payload?.events)) return "";
   const lines = [];
-  for (const event of payload.events) {
+  const orderedEvents = payload.events
+    .map((event, index) => ({ event, index }))
+    .sort((left, right) => {
+      const leftTime = Number(left.event?.tStartMs);
+      const rightTime = Number(right.event?.tStartMs);
+      const safeLeft = Number.isFinite(leftTime) ? Math.max(0, leftTime) : Number.MAX_SAFE_INTEGER;
+      const safeRight = Number.isFinite(rightTime) ? Math.max(0, rightTime) : Number.MAX_SAFE_INTEGER;
+      return safeLeft - safeRight || left.index - right.index;
+    });
+  for (const { event } of orderedEvents) {
     if (!Array.isArray(event?.segs)) continue;
     const text = decodeHtmlEntities(event.segs.map((segment) => segment?.utf8 ?? "").join(""))
       .replace(/\s+/g, " ")

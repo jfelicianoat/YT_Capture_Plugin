@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node --test" },
+  "scripts": {
+    "test": "node --test",
+    "verify": "node --test && node scripts/validate-extension.mjs",
+    "package": "node scripts/package.mjs"
+  },
   "engines": { "node": ">=20" }
 }

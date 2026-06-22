@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { prepareCaptureForDownload } from "../src/capture-pipeline.js";
 import { CaptureContractError } from "../src/contracts/capture-validator.js";
+import { buildCaptureMarkdown, MarkdownValidationError } from "../src/markdown/markdown-builder.js";
 import { validYoutubeCapture } from "./fixtures/captures.js";
 
 test("una captura inválida no alcanza serialización ni descarga", async () => {
@@ -27,10 +28,22 @@ test("una captura inválida no alcanza serialización ni descarga", async () => 
 test("una captura válida se valida antes de serializar y descargar", async () => {
   const calls = [];
   const result = await prepareCaptureForDownload(validYoutubeCapture, {
-    serialize: async () => { calls.push("serialize"); return "# Markdown"; },
+    serialize: async (candidate) => { calls.push("serialize"); return buildCaptureMarkdown(candidate); },
     download: async ({ markdown }) => { calls.push("download"); return markdown.length; }
   });
 
   assert.deepEqual(calls, ["serialize", "download"]);
-  assert.equal(result, 10);
+  assert.ok(result > 100);
+});
+
+test("un Markdown corrupto después de serializar no alcanza la descarga", async () => {
+  let downloadCalls = 0;
+  await assert.rejects(
+    prepareCaptureForDownload(validYoutubeCapture, {
+      serialize: async () => "---\ntitle: \"otro título\"\n---\n",
+      download: async () => { downloadCalls += 1; }
+    }),
+    MarkdownValidationError
+  );
+  assert.equal(downloadCalls, 0);
 });

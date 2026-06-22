@@ -2,6 +2,8 @@ import { collectYoutubePageData } from "./page-context.js";
 import { buildCaptureCandidate, getYoutubeVideoId, selectMetadata } from "./metadata.js";
 import { captionTrackType, parseJson3Transcript, selectCaptionTrack, withJson3Format } from "./transcript.js";
 
+export const TRANSCRIPT_FETCH_TIMEOUT_MS = 15_000;
+
 export class ExtractionError extends Error {
   constructor(code, message, details = null) {
     super(message);
@@ -20,10 +22,23 @@ async function executeInPageWithChrome(tabId) {
   return results[0]?.result ?? null;
 }
 
-async function fetchJsonWithBrowser(url) {
-  const response = await fetch(url, { credentials: "include" });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  return response.json();
+export async function fetchJsonWithBrowser(
+  url,
+  {
+    fetchFunction = fetch,
+    timeoutMs = TRANSCRIPT_FETCH_TIMEOUT_MS,
+    AbortControllerClass = AbortController
+  } = {}
+) {
+  const controller = new AbortControllerClass();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetchFunction(url, { credentials: "include", signal: controller.signal });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 export async function extractYoutubeVideo(

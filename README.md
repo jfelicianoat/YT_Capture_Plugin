@@ -71,7 +71,7 @@ status: "pending"
 3. Clic en **Cargar extensión sin empaquetar**
 4. Seleccioná la carpeta del proyecto
 
-> Funciona en modo normal e incógnito. Sin configuración adicional.
+> Funciona en modo normal. Para incógnito hay que activar **Permitir en incógnito** desde los detalles de la extensión.
 
 ## Permisos
 
@@ -105,12 +105,19 @@ status: "pending"
 
 ## Desarrollo
 
-Las fases 1 y 2 incluyen la estructura Manifest V3, el contrato de captura v1, la validación previa a cualquier descarga y la extracción real de metadata y transcripciones de YouTube. La selección de metadata usa JSON-LD, variables globales y DOM en ese orden; la transcripción admite pistas manuales, automáticas y vídeos sin subtítulos.
+Las fases 1, 2 y 3 incluyen la estructura Manifest V3, la extracción real de metadata y transcripciones, la validación contractual antes y después de serializar, y la descarga UTF-8 en `YT-Knowledge-Inbox/`. La selección de metadata usa JSON-LD, variables globales y DOM en ese orden; la transcripción admite pistas manuales, automáticas y vídeos sin subtítulos.
 
-La generación y descarga del Markdown siguen deshabilitadas hasta la fase 3. Por ese motivo, el botón **CAPTURAR VIDEO** permanece inactivo aunque el popup muestre correctamente los datos detectados.
+El botón **CAPTURAR VIDEO** se habilita únicamente cuando la captura detectada cumple el contrato. Los nombres se sanejan para Windows, se limitan a 200 caracteres y añaden `[video_id]` cuando se detecta una colisión. El navegador conserva `uniquify` como última protección frente a sobrescrituras.
 
 ```powershell
 node --test
+```
+
+La guía de carga, validación y empaquetado está en [`docs/Installation.md`](docs/Installation.md). La prueba manual de cierre para Chrome y Edge está en [`docs/Manual_Test_Checklist.md`](docs/Manual_Test_Checklist.md).
+
+```powershell
+npm run verify
+npm run package
 ```
 
 ```text
@@ -128,7 +135,7 @@ tests/
 
 - Chrome (primario)
 - Edge (secundario)
-- Firefox (secundario)
+- Firefox no forma parte del MVP
 
 ## Licencia
 
