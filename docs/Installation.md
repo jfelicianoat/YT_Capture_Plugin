@@ -1,5 +1,7 @@
 # Instalación y empaquetado
 
+> Para una instalación directa y breve desde Windows, consulta también `INSTALAR_EN_NAVEGADOR.md`.
+
 ## Requisitos de desarrollo
 
 - Node.js 20 o superior.
@@ -16,6 +18,8 @@ npm run verify
 Este comando ejecuta la suite completa, valida el manifiesto, comprueba sus referencias y analiza la sintaxis de los scripts sin ejecutar el popup.
 
 ## Carga sin empaquetar en Chrome
+
+No hay que compilar la extensión ni instalar dependencias. La propia raíz del proyecto es la carpeta instalable.
 
 1. Abrir `chrome://extensions/`.
 2. Activar **Modo desarrollador**.

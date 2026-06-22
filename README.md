@@ -2,6 +2,8 @@
 
 Extensión de Chrome (Manifest V3) que captura metadatos y transcripciones de videos de YouTube, los valida contra un contrato de datos y los persiste como archivos Markdown estructurados listos para procesamiento por un Orchestrator.
 
+> **Instalación:** no requiere compilación. Sigue [`INSTALAR_EN_NAVEGADOR.md`](INSTALAR_EN_NAVEGADOR.md) y selecciona esta carpeta —la que contiene `manifest.json`— mediante **Cargar extensión sin empaquetar**.
+
 ## Cómo funciona
 
 1. Navegás a un video de YouTube
@@ -66,10 +68,12 @@ status: "pending"
 
 ## Instalación
 
-1. Abrí `chrome://extensions/`
-2. Activá **Modo desarrollador**
-3. Clic en **Cargar extensión sin empaquetar**
-4. Seleccioná la carpeta del proyecto
+1. Abrí `chrome://extensions/`.
+2. Activá **Modo desarrollador**.
+3. Hacé clic en **Cargar extensión sin empaquetar**.
+4. Seleccioná `D:\Desarrollo\Proyectos TFM\YT_Capture_Plugin`, la carpeta que contiene `manifest.json`.
+
+Consulta la guía completa en [`INSTALAR_EN_NAVEGADOR.md`](INSTALAR_EN_NAVEGADOR.md). Para crear el paquete de distribución, ejecuta `GENERAR_ZIP.cmd`.
 
 > Funciona en modo normal. Para incógnito hay que activar **Permitir en incógnito** desde los detalles de la extensión.
 
