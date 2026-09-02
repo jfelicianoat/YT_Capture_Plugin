@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   buildCaptureCandidate,
   getYoutubeVideoId,
+  normalizePublishedDate,
   parseClockDuration,
   parseIsoDuration,
   selectMetadata
@@ -22,6 +23,29 @@ test("convierte duraciones ISO y de reloj", () => {
   assert.equal(parseIsoDuration("PT28M45S"), 1725);
   assert.equal(parseClockDuration("1:02:03"), 3723);
   assert.equal(parseClockDuration("28:45"), 1725);
+});
+
+test("normaliza la fecha de publicación al formato YYYY-MM-DD", () => {
+  assert.equal(normalizePublishedDate("2024-05-10"), "2024-05-10");
+  assert.equal(normalizePublishedDate("2024-05-10T00:00:00-07:00"), "2024-05-10");
+  assert.equal(normalizePublishedDate("2024-05-10T07:00:00Z"), "2024-05-10");
+  assert.equal(normalizePublishedDate(null), null);
+  assert.equal(normalizePublishedDate("10 de mayo de 2024"), null);
+});
+
+test("selectMetadata recorta fechas ISO completas de Schema y globals", () => {
+  const withIsoDates = {
+    ...pageDataWithAllSources,
+    schema: { ...pageDataWithAllSources.schema, publishedDate: "2026-06-01T00:00:00-07:00" }
+  };
+  assert.equal(selectMetadata(withIsoDates, withIsoDates.url).publishedDate, "2026-06-01");
+
+  const globalsOnly = {
+    ...pageDataWithAllSources,
+    schema: null,
+    globals: { ...pageDataWithAllSources.globals, publishedDate: "2026-05-01T12:34:56Z" }
+  };
+  assert.equal(selectMetadata(globalsOnly, globalsOnly.url).publishedDate, "2026-05-01");
 });
 
 test("prioriza Schema sobre globals y DOM", () => {

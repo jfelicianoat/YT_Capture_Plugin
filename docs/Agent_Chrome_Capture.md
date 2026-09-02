@@ -356,11 +356,30 @@ Esta sección prevalece sobre cualquier ejemplo anterior que resulte ambiguo.
 
 ### Extracción de transcripciones
 
-1. Localizar `ytInitialPlayerResponse.captions.playerCaptionsTracklistRenderer.captionTracks` en el contexto principal.
-2. Seleccionar primero una pista manual del idioma mostrado por YouTube; después una pista automática del mismo idioma; finalmente la primera pista disponible.
-3. Solicitar el `baseUrl` de la pista con formato `json3` y convertir sus eventos en líneas `[HH:MM:SS] texto` en orden cronológico.
-4. Normalizar espacios y entidades HTML, conservar el texto original y omitir eventos vacíos. No resumir ni traducir.
-5. Si no existen pistas, la descarga falla o el contenido no puede analizarse, generar igualmente el Markdown con `has_transcript: false`, `transcript_source: null` y una sección de transcripción vacía.
+> **Actualización:** el endpoint `timedtext` exige desde 2025 un token anti-bot (`pot`) que
+> `getPlayerResponse()` no incluye; sin él responde `200` con cuerpo vacío. El método
+> principal pasa a ser la lectura del panel de transcripción de YouTube. El acceso a
+> `timedtext` queda como fallback.
+
+1. **Enfoque A (principal):** ejecutar en `world: "MAIN"` un script que abra el panel
+   «Mostrar transcripción» (expandiendo la descripción si hace falta), espere a que
+   YouTube cargue los segmentos —vista moderna `transcript-segment-view-model` (marca en
+   `.ytwTranscriptSegmentViewModelTimestamp`, texto en `span.ytAttributedStringHost`) o
+   vista clásica `ytd-transcript-segment-renderer`—, lea `timestamp` + `text` de cada uno
+   y cierre el panel. Devolver solo `{ segments: [{ timestamp, text }], ... }`.
+2. **Fallback:** localizar `movie_player.getPlayerResponse().captions.playerCaptionsTracklistRenderer.captionTracks`.
+   Seleccionar primero una pista manual del idioma mostrado por YouTube; después una pista
+   automática del mismo idioma; finalmente la primera pista disponible. Solicitar su
+   `baseUrl` con formato `json3` desde el contexto de la pestaña.
+3. En ambas vías, convertir el resultado en líneas `[HH:MM:SS] texto` en orden cronológico,
+   normalizar espacios y entidades HTML, conservar el texto original y omitir segmentos
+   vacíos. No resumir ni traducir.
+4. `transcript_language` sale de la pista seleccionada (o del idioma de la interfaz, o
+   `"und"`); `transcript_source` es `"manual" | "automatic"` según la pista (o `"automatic"`
+   si solo se dispone del panel).
+5. Si ninguna vía devuelve texto, generar igualmente el Markdown con `has_transcript: false`,
+   `transcript_source: null`, la sección de transcripción vacía y un `transcript_note` con
+   la causa.
 
 El fichero debe indicar `transcript_source: "manual" | "automatic" | null` y `transcript_language`. La captura de metadata mantiene la jerarquía JSON-LD, variables globales y DOM ya descrita.
 

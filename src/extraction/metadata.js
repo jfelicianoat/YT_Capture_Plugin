@@ -20,6 +20,19 @@ export function parseIsoDuration(value) {
   return Math.round(Number(match[1] ?? 0) * 3600 + Number(match[2] ?? 0) * 60 + Number(match[3] ?? 0));
 }
 
+export function normalizePublishedDate(value) {
+  if (typeof value !== "string") return null;
+  // YouTube expone la fecha como "YYYY-MM-DD" o como ISO 8601 completo
+  // ("2024-05-10T00:00:00-07:00"). El contrato exige solo la parte de fecha.
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return null;
+  const [, year, month, day] = match;
+  const iso = `${year}-${month}-${day}`;
+  const date = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return null;
+  return iso;
+}
+
 export function parseClockDuration(value) {
   if (typeof value !== "string") return null;
   const parts = value.trim().split(":").map(Number);
@@ -36,7 +49,7 @@ export function selectMetadata(pageData, tabUrl) {
       channel: pageData.schema.channel ?? "Canal no disponible",
       channelUrl: pageData.schema.channelUrl ?? null,
       durationSeconds: parseIsoDuration(pageData.schema.duration) ?? pageData.globals?.durationSeconds ?? 0,
-      publishedDate: pageData.schema.publishedDate ?? null,
+      publishedDate: normalizePublishedDate(pageData.schema.publishedDate),
       extractionMethod: "schema_jsonld"
     };
   }
@@ -47,7 +60,7 @@ export function selectMetadata(pageData, tabUrl) {
       channel: pageData.globals.channel ?? "Canal no disponible",
       channelUrl: pageData.globals.channelUrl ?? null,
       durationSeconds: Number.isFinite(pageData.globals.durationSeconds) ? pageData.globals.durationSeconds : 0,
-      publishedDate: pageData.globals.publishedDate ?? null,
+      publishedDate: normalizePublishedDate(pageData.globals.publishedDate),
       extractionMethod: "yt_globals"
     };
   }

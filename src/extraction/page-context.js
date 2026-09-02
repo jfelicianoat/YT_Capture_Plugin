@@ -38,7 +38,16 @@ export function collectYoutubePageData() {
     }
   }
 
-  const player = window.ytInitialPlayerResponse ?? null;
+  // El objeto global `ytInitialPlayerResponse` se queda obsoleto tras la
+  // navegación SPA de YouTube y, además, sus URLs de subtítulos no llevan el
+  // token anti-bot (`pot`). El reproductor sí expone la respuesta vigente.
+  let player = null;
+  try {
+    player = document.getElementById("movie_player")?.getPlayerResponse?.() ?? null;
+  } catch {
+    player = null;
+  }
+  player = player ?? window.ytInitialPlayerResponse ?? null;
   const details = player?.videoDetails ?? null;
   const microformat = player?.microformat?.playerMicroformatRenderer ?? null;
   const captionTracks = player?.captions?.playerCaptionsTracklistRenderer?.captionTracks ?? [];

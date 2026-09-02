@@ -29,12 +29,21 @@ La extracción que necesita variables de la página se ejecuta con `chrome.scrip
 
 ### Transcripciones
 
-Busca `ytInitialPlayerResponse.captions.playerCaptionsTracklistRenderer.captionTracks` y prioriza:
+**Método principal (enfoque A):** abre el panel «Mostrar transcripción» de YouTube en la
+pestaña y copia los segmentos del DOM, tanto de la vista moderna
+(`transcript-segment-view-model`) como de la clásica (`ytd-transcript-segment-renderer`).
+Lo alimenta el propio reproductor, así que evita el bloqueo anti-bot (`pot`) que hoy
+devuelve cuerpos vacíos en el endpoint `timedtext`.
+
+**Fallback:** si el panel no carga, descarga el `baseUrl` de la pista (`captionTracks`,
+formato `json3`) desde el contexto de la pestaña. Prioridad de pista:
 1. Pista manual del idioma del usuario
 2. Pista automática del mismo idioma
 3. Primera pista disponible
 
-Convierte el `baseUrl` (formato `json3`) a líneas `[HH:MM:SS] texto` en orden cronológico. Si no hay pistas disponibles, genera el Markdown igual con `has_transcript: false`.
+En ambos casos el resultado son líneas `[HH:MM:SS] texto` en orden cronológico. Si ninguna
+vía devuelve texto, genera el Markdown igual con `has_transcript: false` y un
+`transcript_note` explicando la causa.
 
 ## Formato de salida
 

@@ -97,7 +97,9 @@ async function refreshFromActiveTab() {
     setCaptureButton({ disabled: false });
     setStatus(candidate.has_transcript
       ? "Datos listos para generar el Markdown."
-      : "Vídeo sin transcripción. Se generará el Markdown con la sección vacía.");
+      : candidate.transcript_note
+        ? `Sin transcripción: ${candidate.transcript_note}`
+        : "Vídeo sin transcripción. Se generará el Markdown con la sección vacía.");
   } catch (error) {
     if (generation !== refreshGeneration) return;
     currentCandidate = null;
