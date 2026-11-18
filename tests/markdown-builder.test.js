@@ -56,3 +56,9 @@ test("rechaza documentos que superan el límite contractual de 20 MiB", () => {
     /supera el límite de 20 MiB/
   );
 });
+
+test("una duración no entera no llega al Markdown: el contrato exige segundos enteros", () => {
+  assert.throws(() => buildCaptureMarkdown({ ...validYoutubeCapture, duration_seconds: 90.5 }));
+  const markdown = buildCaptureMarkdown({ ...validYoutubeCapture, duration_seconds: 90 });
+  assert.match(markdown, /\*\*Duración:\*\* 01:30 {2}/);
+});

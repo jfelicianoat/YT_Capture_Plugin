@@ -4,13 +4,35 @@ import test from "node:test";
 import {
   buildCaptureFilename,
   downloadCaptureMarkdown,
-  sanitizeFilenamePart
+  sanitizeFilenamePart,
+  waitForDownload
 } from "../src/download/chrome-downloader.js";
 import { validYoutubeCapture } from "./fixtures/captures.js";
 
-function downloaderFixture({ searchResults = [], downloadResult = 42, searchError = null } = {}) {
-  const calls = { search: [], download: [], create: [], revoke: [] };
+function downloaderFixture({
+  searchResults = [],
+  downloadResult = 42,
+  searchError = null,
+  outcome = "complete"
+} = {}) {
+  const calls = { search: [], download: [], create: [], revoke: [], order: [] };
+  const listeners = new Set();
   const downloads = {
+    onChanged: {
+      addListener(listener) {
+        listeners.add(listener);
+        // Chrome avisa del final de la descarga más tarde, por su cuenta.
+        if (outcome) {
+          setTimeout(() => {
+            calls.order.push(`evento:${outcome}`);
+            for (const each of [...listeners]) {
+              each({ id: downloadResult, state: { current: outcome }, error: { current: "NETWORK_FAILED" } });
+            }
+          }, 0);
+        }
+      },
+      removeListener(listener) { listeners.delete(listener); }
+    },
     async search(query) {
       calls.search.push(query);
       if (searchError) throw searchError;
@@ -24,7 +46,7 @@ function downloaderFixture({ searchResults = [], downloadResult = 42, searchErro
   };
   const urlApi = {
     createObjectURL(blob) { calls.create.push(blob); return "blob:test"; },
-    revokeObjectURL(url) { calls.revoke.push(url); }
+    revokeObjectURL(url) { calls.revoke.push(url); calls.order.push("revocar"); }
   };
   class BlobConstructor {
     constructor(parts, options) { this.parts = parts; this.type = options.type; }
@@ -80,4 +102,29 @@ test("revoca la URL aunque Chrome rechace la descarga", async () => {
     /Download denied/
   );
   assert.deepEqual(fixture.calls.revoke, ["blob:test"]);
+});
+
+test("revoca la URL solo cuando Chrome da la descarga por terminada", async () => {
+  const fixture = downloaderFixture();
+  await downloadCaptureMarkdown({ candidate: validYoutubeCapture, markdown: "# x" }, fixture.dependencies);
+  assert.deepEqual(fixture.calls.order, ["evento:complete", "revocar"]);
+});
+
+test("una descarga interrumpida falla y revoca igualmente la URL", async () => {
+  const fixture = downloaderFixture({ outcome: "interrupted" });
+  await assert.rejects(
+    downloadCaptureMarkdown({ candidate: validYoutubeCapture, markdown: "# x" }, fixture.dependencies),
+    /interrumpió/
+  );
+  assert.deepEqual(fixture.calls.revoke, ["blob:test"]);
+});
+
+test("si Chrome no avisa, la espera termina con un error", async () => {
+  const { dependencies } = downloaderFixture({ outcome: null });
+  await assert.rejects(waitForDownload(dependencies.downloads, 42, 20), /no terminó/);
+});
+
+test("una descarga que ya terminó antes de escuchar no se queda esperando", async () => {
+  const { dependencies } = downloaderFixture({ outcome: null, searchResults: [{ id: 42, state: "complete" }] });
+  await waitForDownload(dependencies.downloads, 42, 1000);
 });

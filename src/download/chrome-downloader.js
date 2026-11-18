@@ -1,4 +1,5 @@
 const OUTPUT_DIRECTORY = "YT-Knowledge-Inbox";
+const DOWNLOAD_TIMEOUT_MS = 60_000;
 const MAX_FILENAME_LENGTH = 200;
 const INVALID_WINDOWS_CHARACTERS = /[<>:"/\\|?*\u0000-\u001F]/g;
 
@@ -35,12 +36,52 @@ async function hasPreviousDownload(downloads, filename) {
   return matches.some((item) => basename(item.filename).toLocaleLowerCase() === filename.toLocaleLowerCase());
 }
 
+/**
+ * Espera a que Chrome termine (o interrumpa) la descarga: `download()` vuelve
+ * cuando empieza, y revocar la URL del blob en ese momento puede cortarla.
+ */
+export function waitForDownload(downloads, downloadId, timeoutMs = DOWNLOAD_TIMEOUT_MS) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (settle, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      downloads.onChanged.removeListener(onChanged);
+      settle(value);
+    };
+    const onState = (state, error) => {
+      if (state === "complete") finish(resolve);
+      if (state === "interrupted") {
+        finish(reject, new Error(`La descarga se interrumpió (${error ?? "motivo desconocido"})`));
+      }
+    };
+    const onChanged = (delta) => {
+      if (delta.id !== downloadId || !delta.state) return;
+      onState(delta.state.current, delta.error?.current);
+    };
+    const timer = setTimeout(
+      () => finish(reject, new Error(`La descarga no terminó en ${Math.round(timeoutMs / 1000)} segundos`)),
+      timeoutMs
+    );
+    downloads.onChanged.addListener(onChanged);
+    // Un fichero pequeño puede terminar antes de que exista el oyente: se mira su estado actual.
+    Promise.resolve(downloads.search({ id: downloadId }))
+      .then((items) => {
+        const item = Array.isArray(items) ? items.find((entry) => entry?.id === downloadId) : undefined;
+        if (item) onState(item.state, item.error);
+      })
+      .catch(() => {});
+  });
+}
+
 export async function downloadCaptureMarkdown(
   { candidate, markdown },
   {
     downloads = chrome.downloads,
     urlApi = URL,
-    BlobConstructor = Blob
+    BlobConstructor = Blob,
+    timeoutMs = DOWNLOAD_TIMEOUT_MS
   } = {}
 ) {
   const baseFilename = buildCaptureFilename(candidate);
@@ -63,6 +104,7 @@ export async function downloadCaptureMarkdown(
       saveAs: false
     });
     if (!Number.isInteger(downloadId)) throw new Error("Chrome no devolvió un identificador de descarga");
+    await waitForDownload(downloads, downloadId, timeoutMs);
     return { downloadId, filename, path };
   } finally {
     urlApi.revokeObjectURL(blobUrl);

@@ -33,6 +33,11 @@ Registrar versión del navegador, URL del vídeo, resultado y captura del error 
 - [ ] Una página no YouTube mantiene el botón deshabilitado.
 - [ ] El fichero se guarda bajo `Downloads/YT-Knowledge-Inbox/`.
 
+## Descarga larga (YT-01, desde 0.1.1)
+
+- [x] Capturar un vídeo de más de 2 horas con transcripción: el `.md` aparece completo en `Descargas/YT-Knowledge-Inbox/` y el popup muestra «Descarga completada».
+  Hecho el 14-nov-2026 en Chromium (Playwright) con la extensión desempaquetada 0.1.1, perfil y descargas temporales: vídeo de 2 h 23 min 56 s, 1.230 líneas de transcripción (00:00:00 a 02:23:36), descarga `complete` 144.048/144.048 bytes, popup «Descarga completada». Evidencia y arnés en `docs/evidencias/`. Destino comprobado después, ya sin la intercepción de descargas de Playwright (`Browser.setDownloadBehavior: default`) y con la carpeta de descargas del perfil apuntando a un temporal: el fichero queda en `<descargas>/YT-Knowledge-Inbox/2026-11-14 - <título>.md`, con 1.230 líneas (`YT-01_destino_2026-11-14.json`). Chrome de marca ya no admite `--load-extension`; en el navegador del usuario se instala el ZIP como extensión desempaquetada, como indica `docs/INSTALAR_EN_NAVEGADOR.md`.
+
 ## Cierre
 
 - [ ] Adjuntar el SHA-256 del ZIP probado.

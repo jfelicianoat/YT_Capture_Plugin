@@ -117,11 +117,12 @@ async function captureCurrentVideo() {
   setStatus("Validando y generando el archivo…");
 
   try {
+    setStatus("Descargando… no cierres esta ventana.");
     const result = await prepareCaptureForDownload(candidate, {
       serialize: buildCaptureMarkdown,
       download: downloadCaptureMarkdown
     });
-    setStatus(`Descarga iniciada: ${result.filename}`, "success");
+    setStatus(`Descarga completada: ${result.filename}`, "success");
   } catch (error) {
     console.error("Error al capturar el vídeo", error);
     setStatus(error?.message ?? "No se pudo descargar el archivo.", "error");

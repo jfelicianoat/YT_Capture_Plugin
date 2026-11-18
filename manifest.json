@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "YT Knowledge Capture",
   "description": "Captura metadatos y transcripciones de YouTube como Markdown validado.",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "minimum_chrome_version": "102",
   "permissions": ["activeTab", "downloads", "scripting"],
   "host_permissions": ["https://www.youtube.com/*"],

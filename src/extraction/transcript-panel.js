@@ -26,9 +26,25 @@ export function parsePanelSegments(segments) {
   return lines.join("\n");
 }
 
+// Selectores del marcado de YouTube, en un solo sitio: la función de la página los
+// recibe por `args` y las fixtures de `tests/fixtures/youtube` los comprueban (YT-03).
+export const TRANSCRIPT_SELECTORS = Object.freeze({
+  // Vista moderna de transcripción (YouTube 2025+).
+  modernSegment: "transcript-segment-view-model",
+  modernTimestamp: ".ytwTranscriptSegmentViewModelTimestamp",
+  modernText: "span.ytAttributedStringHost",
+  modernTextFallback: "[class*='SegmentText']",
+  // Vista clásica.
+  classicSegment: "ytd-transcript-segment-renderer",
+  classicTimestamp: ".segment-timestamp",
+  classicTimestampFallback: "[class*='timestamp']",
+  classicText: ".segment-text",
+  classicTextFallback: "yt-formatted-string.segment-text"
+});
+
 // Se ejecuta dentro de la pestaña de YouTube (world MAIN). Debe ser
 // autocontenida: `chrome.scripting.executeScript` la serializa como texto.
-async function scrapeTranscriptPanelInPage() {
+async function scrapeTranscriptPanelInPage(sel) {
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   async function waitFor(getter, { tries, interval }) {
@@ -46,11 +62,11 @@ async function scrapeTranscriptPanelInPage() {
     // Vista moderna de transcripción (YouTube 2025+): `transcript-segment-view-model`.
     // El texto vive en un `span.ytAttributedStringHost` y la marca de tiempo en
     // `.ytwTranscriptSegmentViewModelTimestamp` (distinta del `...A11yLabel`).
-    for (const node of document.querySelectorAll("transcript-segment-view-model")) {
-      const timestamp = (node.querySelector(".ytwTranscriptSegmentViewModelTimestamp")?.textContent ?? "").trim();
+    for (const node of document.querySelectorAll(sel.modernSegment)) {
+      const timestamp = (node.querySelector(sel.modernTimestamp)?.textContent ?? "").trim();
       const text = (
-        node.querySelector("span.ytAttributedStringHost")?.textContent
-        ?? node.querySelector("[class*='SegmentText']")?.textContent
+        node.querySelector(sel.modernText)?.textContent
+        ?? node.querySelector(sel.modernTextFallback)?.textContent
         ?? ""
       ).trim();
       if (text) segments.push({ timestamp, text });
@@ -58,15 +74,15 @@ async function scrapeTranscriptPanelInPage() {
     if (segments.length) return segments;
 
     // Vista clásica: `ytd-transcript-segment-renderer`.
-    for (const node of document.querySelectorAll("ytd-transcript-segment-renderer")) {
+    for (const node of document.querySelectorAll(sel.classicSegment)) {
       const timestamp = (
-        node.querySelector(".segment-timestamp")?.textContent
-        ?? node.querySelector("[class*='timestamp']")?.textContent
+        node.querySelector(sel.classicTimestamp)?.textContent
+        ?? node.querySelector(sel.classicTimestampFallback)?.textContent
         ?? ""
       ).trim();
       const text = (
-        node.querySelector(".segment-text")?.textContent
-        ?? node.querySelector("yt-formatted-string.segment-text")?.textContent
+        node.querySelector(sel.classicText)?.textContent
+        ?? node.querySelector(sel.classicTextFallback)?.textContent
         ?? ""
       ).trim();
       if (text) segments.push({ timestamp, text });
@@ -131,7 +147,8 @@ export async function openTranscriptPanelWithChrome(tabId) {
   const results = await chrome.scripting.executeScript({
     target: { tabId },
     world: "MAIN",
-    func: scrapeTranscriptPanelInPage
+    func: scrapeTranscriptPanelInPage,
+    args: [TRANSCRIPT_SELECTORS]
   });
   return results[0]?.result ?? null;
 }

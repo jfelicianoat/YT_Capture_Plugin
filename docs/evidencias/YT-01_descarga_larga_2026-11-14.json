@@ -1,0 +1,24 @@
+{
+  "extension": "ojidlepgdonlfjmbnfadeeolokkeknmo",
+  "detectado": {
+    "titulo": "Sam Altman: OpenAI CEO on GPT-4, ChatGPT, and the Future of AI | Lex Fridman Podcast #367",
+    "duracion": "02:23:56",
+    "transcripcion": "Automática (en)"
+  },
+  "estados": [
+    "0.0s Descargando… no cierres esta ventana.",
+    "0.5s Descarga completada: 2026-11-14 - Sam Altman OpenAI CEO on GPT-4, ChatGPT, and the Future of AI Lex Fridman Podcast #367.md"
+  ],
+  "descarga": {
+    "estado": "complete",
+    "bytes": 144048,
+    "total": 144048,
+    "nombre": "C:\\Users\\jfeli\\AppData\\Local\\Temp\\claude\\79afb9b8fcc360f5\\f1be5633-5566-4cc1-b084-b5cbc4b6d302\\scratchpad\\yt01\\descargas\\f6c60849-aae1-439c-8148-1fbfc686d41f"
+  },
+  "fichero": "C:\\Users\\jfeli\\AppData\\Local\\Temp\\claude\\79afb9b8fcc360f5\\f1be5633-5566-4cc1-b084-b5cbc4b6d302\\scratchpad\\yt01\\descargas\\f6c60849-aae1-439c-8148-1fbfc686d41f",
+  "bytes_fichero": 144040,
+  "lineas_transcripcion": 1230,
+  "primera": "[00:00:00] - We have been a misunderstood and badly mocked org for a long time.",
+  "ultima": "[02:23:36] At some stage, therefore, we should have to expect the machines to take control.\" Thank you for listening and hope to see you next time.",
+  "cierre_frontmatter": true
+}
